@@ -48,6 +48,7 @@ class MainWindow:
             mult_tab.create_window()
             mult_tab.create_lvl()
         while global_play:
+            pygame.mixer.music.pause()
             clock.tick(FPS)
             mult_tab.check_cards()
             for event in pygame.event.get():
@@ -77,6 +78,7 @@ class MainWindow:
             vocab_words.create_window()
             vocab_words.create_level()
         while global_play:
+            pygame.mixer.music.pause()
             clock.tick(FPS)
             vocab_words.change_letters()
             for event in pygame.event.get():
@@ -87,6 +89,8 @@ class MainWindow:
 
     def go_to_home(self):
         global global_play
+        pygame.mixer.music.load('Music\\home_bg_melody.wav')
+        pygame.mixer.music.play(-1)
         global_play = True
         home = House()
         home.create_window()
@@ -313,6 +317,7 @@ class MultiplicationTable:
     def close_(self):
         global global_play
         global_play = False
+        pygame.mixer.music.unpause()
 
 
 class VocabularyWords:
@@ -431,6 +436,7 @@ class VocabularyWords:
     def close_(self):
         global global_play
         global_play = False
+        pygame.mixer.music.unpause()
 
 
 class House:
@@ -483,6 +489,8 @@ class House:
     def close_(self):
         global global_play
         global_play = False
+        pygame.mixer.music.load('Music\\main_selecting.wav')
+        pygame.mixer.music.play(-1)
 
 
 class AnimalsWindow:
@@ -810,6 +818,8 @@ feed = True
 pygame.init()
 game_display = pygame.display.set_mode((800, 504))
 clock = pygame.time.Clock()
+pygame.mixer.music.load('Music\\main_selecting.wav')
+pygame.mixer.music.play(-1)
 events = Event(game_display)
 animal_list = []
 ANIMAL_SECTION = 'ANIMAL'
