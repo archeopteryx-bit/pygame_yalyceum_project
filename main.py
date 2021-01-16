@@ -641,6 +641,8 @@ class Shop:
         self.type = what_buy[0]
         self.buy.draw_button()
         self.cancel.draw_button()
+        to_write(game_display, 'Купить', 135, 345)
+        to_write(game_display, 'Отмена', 591, 345)
         self.animal_section.set_clicked(False)
         self.food_section.set_clicked(False)
         self.back_button.set_clicked(False)
