@@ -115,7 +115,7 @@ class MainWindow:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
-            pygame.display_update()
+            pygame.display.update()
         self.create_window()
 
     def go_to_home(self):
@@ -531,8 +531,8 @@ class Chemistry_Game(VocabularyWords):
     def init_level(self):
         global played_chemistry
         if self.word_number != len(self.reacts):
-            a = self.reacts[self.word_number][2].split()
-            self.current_word = self.reacts[self.word_number][1]
+            a = self.reacts[self.word_number][1].split()
+            self.current_word = self.reacts[self.word_number][0]
             self.current_img = pygame.image.load(os.path.join(a[0], a[1], a[2]))
             game_display.blit(self.current_img, (300, 0)) 
         else:
