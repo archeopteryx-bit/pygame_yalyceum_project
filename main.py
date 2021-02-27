@@ -6,6 +6,7 @@ from random import choice, sample, randint
 import sqlite3
 from classes import *
 from sprites import *
+import os.path
 
 
 class MainWindow:
@@ -15,6 +16,7 @@ class MainWindow:
         self.rus_games = Button(game_display, 100, 140, 600, 96, rus_image, rus_image_mouse)
         self.home = Button(game_display, 100, 260, 600, 96, home_image, home_image_mouse)
         self.shop = Button(game_display, 100, 380, 600, 96, shop_image, shop_image_mouse)
+        self.chemistry_games = Button(game_display, 0, 20, 98, 456, chemistry_img, chemistry_image_mouse)
 
     def create_window(self):
         game_display.blit(back_select_game, (0, 0))
@@ -22,12 +24,14 @@ class MainWindow:
         self.rus_games.draw_button()
         self.home.draw_button()
         self.shop.draw_button()
+        self.chemistry_games.draw_button()
 
     def selecting(self):
         self.math_games.click(self.math)
         self.rus_games.click(self.rus)
         self.home.click(self.go_to_home)
         self.shop.click(self.go_to_shop)
+        self.chemistry_games.click(self.chemistry)
 
     def math(self):
         global global_play, difficult
@@ -83,6 +87,35 @@ class MainWindow:
                 if event.type == pygame.QUIT:
                     sys.exit()
             pygame.display.update()
+        self.create_window()
+    
+    def chemistry(self):
+        global global_play, difficult
+        difficult = True
+        global_play = True
+        diff = SelectDifficultyLevel()
+        diff.create_window()
+        while difficult:
+            clock.tick(FPS)
+            diff.select()
+            if current_level == NORMAL or current_level == HARD:
+                difficult = True
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+            pygame.display.update()
+        change_coins_quality()
+        if global_play:
+            chem_game = Chemistry_Game()
+            chem_game.create_window()
+            chem_game.create_level()
+        while global_play:
+            clock.tick(FPS)
+            chem_game.change_letters
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+            pygame.display_update()
         self.create_window()
 
     def go_to_home(self):
@@ -381,8 +414,9 @@ class VocabularyWords:
     def init_level(self):
         global played_rus
         if self.word_number != len(self.words):
+            a = self.words[self.word_number][1].split()
             self.current_word = self.words[self.word_number][0]
-            self.current_img = pygame.image.load(self.words[self.word_number][1])
+            self.current_img = pygame.image.load(os.path.join(a[0], a[1], a[2]))
             game_display.blit(self.current_img, (300, 0))
         else:
             game_display.blit(event_img, (100, 100))
@@ -431,6 +465,97 @@ class VocabularyWords:
     def close_(self):
         global global_play
         global_play = False
+    
+
+class Chemistry_Game(VocabularyWords):
+    def __init__(self):
+        self.back_button = Button(game_display, 10, 10, 56, 56, back_img)
+        self.replay_button = Button(game_display, 135, 300, 56, 56, replay_img)
+        self.check_button = Button(game_display, 734, 68, 56, 56, color=(150, 200, 100))
+        self.erase = Button(game_display, 678, 10, 112, 48, eraser_img)
+        self.alphabet = [["C2H2", "CH4", "C2H4"]]
+        self.keyboard = []
+        self.word_number = 0
+        self.current_word = ''
+        self.current_img = None
+        self.reacts = []
+        self.word = ''
+        self.change_img_flag = True
+        self.flag = True
+
+    def create_window(self):
+        game_display.fill((255, 200, 100))
+        self.back_button.draw_button()
+        self.erase.draw_button()
+        self.check_button.draw_button()
+        card_x = 20
+        card_y = 264
+        card_widht = 60
+        card_height = 70
+        for i in range(1):
+            for j in range(3):
+                card = Card(game_display, card_x, card_y, card_widht,
+                            card_height, color=(randint(100, 255), randint(100, 255), randint(100, 255)))
+                card.draw_card()
+                to_write(game_display, self.alphabet[i][j], card_x + card_widht // 3,
+                         card_y + card_height // 4, size=30)
+                self.keyboard.append((self.alphabet[i][j], card_x, card_y, card_widht, card_height))
+                card_x += card_widht + 10
+            card_x = 20
+            card_y += card_height + 10
+    
+    def change_letters(self):
+        self.erase.click(self.erase_last_letter)
+        self.back_button.click(self.close_)
+        self.check_button.click(self.check)
+        mouse = pygame.mouse.get_pos()
+        for i in self.keybord:
+            if (i[1] < mouse[0] < i[1] + i[3]) and (i[2] < mouse[1] < i[2] + i[4]):
+                for event in pygame.event.get():
+                    if event.type == pygame.MOUSEBUTTONUP:
+                        self.word += i[0]
+                        self.create_window()
+        if self.change_img_flag:
+            game_display.blit(self.current_img, (300, 0))
+        to_write(game_display, self.word, 400 - len(self.word) * 10, 210, size=40)
+    
+    def create_level(self):
+        con = sqlite3.connect('game_db.sqlite')
+        cur = con.cursor()
+        result = cur.execute("""SELECT answer, Sprite FROM chemistry_ex
+                                WHERE difficulty = (?)""", (current_level,)).fetchall()  # current_level
+        con.close()
+        self.reacts = sample(result, 2)
+        self.init_level()
+    
+    def init_level(self):
+        global played_chemistry
+        if self.word_number != len(self.reacts):
+            a = self.reacts[self.word_number][2].split()
+            self.current_word = self.reacts[self.word_number][1]
+            self.current_img = pygame.image.load(os.path.join(a[0], a[1], a[2]))
+            game_display.blit(self.current_img, (300, 0)) 
+        else:
+            game_display.blit(event_img, (100, 100))
+            to_write(game_display, 'Вы выиграли.', 325, 120)
+            to_write(game_display, 'Получено ' + str(COINS) + ' денег.', 325, 150)
+            self.replay_button.draw_button()
+            self.replay_button.click(self.replay)
+            self.change_img_flag = False
+            if self.flag:
+                self.add_coins(COINS)
+                played_chemistry = True
+                self.flag = False
+    
+    def check(self):
+        if self.current_word == self.word:
+            self.word_number += 1
+            self.word = ''
+            self.create_window()
+            self.init_level()
+        else:
+            pygame.draw.rect(game_display, (255, 150, 150), (20, 200, 56, 56))
+    
 
 
 class House:
